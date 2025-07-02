@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Options Manager: Valuing Strategic Flexibility</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #334155; /* Darker text for readability */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top */
+            min-height: 100vh;
+            padding: 20px; /* Add some padding around the container */
+        }
+        .container {
+            background-color: #ffffff; /* White background for the main card */
+            padding: 2.5rem; /* More generous padding */
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08); /* Softer, larger shadow */
+            max-width: 900px; /* Wider container */
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5rem; /* Larger title */
+            font-weight: 700; /* Bold */
+            color: #1e3a8a; /* Darker blue for headings */
+            margin-bottom: 0.5rem;
+        }
+        .byline {
+            font-size: 1.1rem;
+            color: #475569; /* Medium gray for byline */
+            margin-bottom: 1.5rem;
+        }
+        p {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #1d4ed8; /* Blue for subheadings */
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .option-selector {
+            margin-bottom: 2rem;
+            text-align: center; /* Center the option buttons */
+        }
+        .option-buttons {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            justify-content: center;
+            gap: 1rem; /* Space between buttons */
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+        .option-button {
+            background-color: #e2e8f0; /* Light gray for unselected */
+            color: #475569;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex-grow: 1; /* Allow buttons to grow */
+            min-width: 150px; /* Minimum width for buttons */
+        }
+        .option-button.selected {
+            background-color: #2563eb; /* Blue for selected */
+            color: white;
+            border-color: #1e40af;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .option-button:hover:not(.selected) {
+            background-color: #cbd5e1; /* Slightly darker gray on hover */
+        }
+
+        .option-form {
+            margin-bottom: 2rem;
+            text-align: left; /* Align form elements to the left */
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.95rem;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #cbd5e1; /* Light gray border */
+            border-radius: 0.5rem; /* Rounded input fields */
+            font-size: 1rem;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        button.calculate-button { /* Specific class for the calculate button */
+            background-color: #2563eb; /* Blue button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: block; /* Make button full width */
+            width: 100%;
+            margin-top: 1.5rem;
+        }
+        button.calculate-button:hover {
+            background-color: #1e40af; /* Darker blue on hover */
+        }
+        .result {
+            margin-top: 2.5rem;
+            padding: 1.5rem;
+            border: 2px solid #10b981; /* Green border */
+            background-color: #ecfdf5; /* Light green background */
+            border-radius: 0.75rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #047857; /* Dark green text */
+            text-align: center;
+        }
+        .interpretation {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #e0f2fe; /* Light blue for interpretation */
+            border-left: 4px solid #3b82f6; /* Blue left border */
+            border-radius: 0.5rem;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #1e40af;
+        }
+        .hidden {
+            display: none;
+        }
+        .input-guidance {
+            font-size: 0.9rem;
+            color: #64748b; /* Slate gray for guidance text */
+            margin-bottom: 1.5rem;
+            border-left: 3px solid #94a3b8; /* Lighter gray border for guidance */
+            padding-left: 10px;
+            font-style: italic;
+        }
+        .grid-cols-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem; /* Space between grid items */
+        }
+        @media (max-width: 768px) {
+            .grid-cols-2 {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .container {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.5rem;
+            }
+            .option-buttons {
+                flex-direction: column; /* Stack buttons vertically on small screens */
+            }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1>Real Options Manager: Valuing Strategic Flexibility</h1>
+        <p class="byline">By Paolo Fontana</p>
+        <p>This tool helps you understand and quantify the value of managerial flexibility embedded in investment projects using the Black-Scholes framework. Select a real option type below to begin.</p>
+        
+        <div class="option-selector">
+            <h2>Select Your Real Option Type:</h2>
+            <div class="option-buttons">
+                <button class="option-button" data-option-type="defer" onclick="selectOption('defer')">Option to Defer (Call)</button>
+                <button class="option-button" data-option-type="expand" onclick="selectOption('expand')">Option to Expand (Call)</button>
+                <button class="option-button" data-option-type="abandon" onclick="selectOption('abandon')">Option to Abandon (Put)</button>
+                <button class="option-button" data-option-type="switch" onclick="selectOption('switch')">Option to Switch (Call)</button>
+            </div>
+        </div>
+
+        <div id="formsContainer">
+            <!-- Defer Option Form -->
+            <div id="deferForm" class="option-form hidden">
+                <h2>Option to Defer Investment</h2>
+                <p class="input-guidance">This option grants the right to delay an investment decision until a later date, allowing for more information gathering or resolution of market uncertainties. It's valued as a Call Option.</p>
+                <div class="grid-cols-2">
+                    <div>
+                        <label for="defer_S0">Project Value ($S_0$):</label>
+                        <input type="number" id="defer_S0" placeholder="PV of project cash flows if started today (e.g., 90)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="defer_K">Investment Cost ($K$):</label>
+                        <input type="number" id="defer_K" placeholder="Cost to undertake the project (e.g., 100)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="defer_T">Time to Expiration ($T$ years):</label>
+                        <input type="number" id="defer_T" step="0.01" placeholder="Years until the opportunity expires (e.g., 3)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="defer_r">Risk-Free Rate ($r$ as decimal):</label>
+                        <input type="number" id="defer_r" step="0.001" placeholder="Annual risk-free rate (e.g., 0.04)" class="rounded-md">
+                    </div>
+                    <div class="col-span-full">
+                        <label for="defer_sigma">Volatility ($\sigma$ as decimal):</label>
+                        <input type="number" id="defer_sigma" step="0.001" placeholder="Volatility of project's future value (e.g., 0.40)" class="rounded-md">
+                    </div>
+                </div>
+                <button class="calculate-button" onclick="calculateOption('defer')">Calculate Defer Option Value</button>
+            </div>
+
+            <!-- Expand Option Form -->
+            <div id="expandForm" class="option-form hidden">
+                <h2>Option to Expand</h2>
+                <p class="input-guidance">This option provides the right to increase the scale of an existing project or embark on a new phase if market conditions become favorable. It's valued as a Call Option.</p>
+                <div class="grid-cols-2">
+                    <div>
+                        <label for="expand_S0">PV of Expanded Project ($S_0$):</label>
+                        <input type="number" id="expand_S0" placeholder="PV of cash flows from the expanded project (e.g., 50)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="expand_K">Expansion Cost ($K$):</label>
+                        <input type="number" id="expand_K" placeholder="Cost to undertake the expansion (e.g., 40)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="expand_T">Time to Expiration ($T$ years):</label>
+                        <input type="number" id="expand_T" step="0.01" placeholder="Years until expansion opportunity expires (e.g., 1.5)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="expand_r">Risk-Free Rate ($r$ as decimal):</label>
+                        <input type="number" id="expand_r" step="0.001" placeholder="Annual risk-free rate (e.g., 0.035)" class="rounded-md">
+                    </div>
+                    <div class="col-span-full">
+                        <label for="expand_sigma">Volatility ($\sigma$ as decimal):</label>
+                        <input type="number" id="expand_sigma" step="0.001" placeholder="Volatility of expanded project's value (e.g., 0.45)" class="rounded-md">
+                    </div>
+                </div>
+                <button class="calculate-button" onclick="calculateOption('expand')">Calculate Expand Option Value</button>
+            </div>
+
+            <!-- Abandon Option Form -->
+            <div id="abandonForm" class="option-form hidden">
+                <h2>Option to Abandon</h2>
+                <p class="input-guidance">This option gives the right to cease a project prematurely, liquidating its assets, if it performs poorly. This limits downside losses and is valued as a Put Option.</p>
+                <div class="grid-cols-2">
+                    <div>
+                        <label for="abandon_S0">PV of Remaining Project Cash Flows ($S_0$):</label>
+                        <input type="number" id="abandon_S0" placeholder="PV of cash flows if project continues (e.g., 5)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="abandon_K">Salvage Value ($K$):</label>
+                        <input type="number" id="abandon_K" placeholder="Value realized upon abandonment (e.g., 6)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="abandon_T">Time to Expiration ($T$ years):</label>
+                        <input type="number" id="abandon_T" step="0.01" placeholder="Remaining project life/time to abandon option (e.g., 3)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="abandon_r">Risk-Free Rate ($r$ as decimal):</label>
+                        <input type="number" id="abandon_r" step="0.001" placeholder="Annual risk-free rate (e.g., 0.035)" class="rounded-md">
+                    </div>
+                    <div class="col-span-full">
+                        <label for="abandon_sigma">Volatility ($\sigma$ as decimal):</label>
+                        <input type="number" id="abandon_sigma" step="0.001" placeholder="Volatility of remaining project value (e.g., 0.25)" class="rounded-md">
+                    </div>
+                </div>
+                <button class="calculate-button" onclick="calculateOption('abandon')">Calculate Abandon Option Value</button>
+            </div>
+
+            <!-- Switch Option Form -->
+            <div id="switchForm" class="option-form hidden">
+                <h2>Option to Switch</h2>
+                <p class="input-guidance">This option provides the flexibility to switch between different inputs, outputs, or processes in a project based on changing market conditions. It's valued as a Call Option.</p>
+                <div class="grid-cols-2">
+                    <div>
+                        <label for="switch_S0">PV of Benefits from Switching ($S_0$):</label>
+                        <input type="number" id="switch_S0" placeholder="PV of cost savings/revenue increase from switching (e.g., 8)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="switch_K">Cost of Switching ($K$):</label>
+                        <input type="number" id="switch_K" placeholder="Cost to implement the switch (e.g., 7)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="switch_T">Time to Expiration ($T$ years):</label>
+                        <input type="number" id="switch_T" step="0.01" placeholder="Years until switch opportunity expires (e.g., 1)" class="rounded-md">
+                    </div>
+                    <div>
+                        <label for="switch_r">Risk-Free Rate ($r$ as decimal):</label>
+                        <input type="number" id="switch_r" step="0.001" placeholder="Annual risk-free rate (e.g., 0.035)" class="rounded-md">
+                    </div>
+                    <div class="col-span-full">
+                        <label for="switch_sigma">Volatility ($\sigma$ as decimal):</label>
+                        <input type="number" id="switch_sigma" step="0.001" placeholder="Volatility of benefits from switching (e.g., 0.30)" class="rounded-md">
+                    </div>
+                </div>
+                <button class="calculate-button" onclick="calculateOption('switch')">Calculate Switch Option Value</button>
+            </div>
+        </div>
+
+        <div id="result" class="result hidden">
+            Calculated <span id="resultOptionType"></span> Option Value: $<span id="optionValue">0.00</span>
+        </div>
+
+        <div id="interpretation" class="interpretation hidden">
+            <h3>Interpretation:</h3>
+            <p id="interpretationText"></p>
+        </div>
+    </div>
+
+    <script>
+        // Black-Scholes Calculator - N(x) function
+        // This is a common approximation for the cumulative normal distribution function (N(x)).
+        // For highly precise financial applications, a dedicated statistical library or backend calculation is usually preferred.
+        function N(x) {
+            const a1 = 0.31938153;
+            const a2 = -0.356563782;
+            const a3 = 1.781477937;
+            const a4 = -1.821255978;
+            const a5 = 1.330274429;
+            const gamma = 0.2316419;
+            const pi = 3.1415926535;
+
+            const sign = (x >= 0) ? 1 : -1;
+            const absX = Math.abs(x);
+            const t = 1.0 / (1.0 + gamma * absX);
+            const N_x = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-absX * absX / 2.0) / Math.sqrt(2.0 * pi);
+
+            return sign * N_x + ((sign === 1) ? 0 : 1);
+        }
+
+        // Black-Scholes Call Option Formula
+        function calculateCallOptionBS(S0, K, T, r, sigma) {
+            if (T <= 0 || sigma <= 0) return 0; // Prevent division by zero or log of zero
+
+            const d1 = (Math.log(S0 / K) + (r + (sigma * sigma) / 2) * T) / (sigma * Math.sqrt(T));
+            const d2 = d1 - sigma * Math.sqrt(T);
+
+            return S0 * N(d1) - K * Math.exp(-r * T) * N(d2);
+        }
+
+        // Black-Scholes Put Option Formula
+        function calculatePutOptionBS(S0, K, T, r, sigma) {
+            if (T <= 0 || sigma <= 0) return 0; // Prevent division by zero or log of zero
+
+            const d1 = (Math.log(S0 / K) + (r + (sigma * sigma) / 2) * T) / (sigma * Math.sqrt(T));
+            const d2 = d1 - sigma * Math.sqrt(T);
+
+            return K * Math.exp(-r * T) * N(-d2) - S0 * N(-d1);
+        }
+
+        // Function to handle option selection (replacing dropdown)
+        function selectOption(optionType) {
+            const allButtons = document.querySelectorAll('.option-button');
+            allButtons.forEach(button => {
+                button.classList.remove('selected'); // Deselect all buttons
+            });
+
+            const selectedButton = document.querySelector(`.option-button[data-option-type="${optionType}"]`);
+            if (selectedButton) {
+                selectedButton.classList.add('selected'); // Select the clicked button
+            }
+
+            // Show the corresponding form and hide others
+            const forms = document.querySelectorAll('.option-form');
+            forms.forEach(form => form.classList.add('hidden'));
+            document.getElementById('result').classList.add('hidden');
+            document.getElementById('interpretation').classList.add('hidden');
+
+            document.getElementById(`${optionType}Form`).classList.remove('hidden');
+        }
+
+        // Modified calculateOption to use client-side Black-Scholes functions
+        async function calculateOption(optionType) {
+            const S0 = parseFloat(document.getElementById(`${optionType}_S0`).value);
+            const K = parseFloat(document.getElementById(`${optionType}_K`).value);
+            const T = parseFloat(document.getElementById(`${optionType}_T`).value);
+            const r = parseFloat(document.getElementById(`${optionType}_r`).value);
+            const sigma = parseFloat(document.getElementById(`${optionType}_sigma`).value);
+
+            if (isNaN(S0) || isNaN(K) || isNaN(T) || isNaN(r) || isNaN(sigma) || T <= 0 || sigma <= 0) {
+                alert("Please ensure all inputs are valid positive numbers. Time to Expiration and Volatility must be greater than zero.");
+                return;
+            }
+
+            let calculatedValue;
+            let displayOptionName = '';
+
+            switch (optionType) {
+                case 'defer':
+                    calculatedValue = calculateCallOptionBS(S0, K, T, r, sigma);
+                    displayOptionName = 'Option to Defer';
+                    break;
+                case 'expand':
+                    calculatedValue = calculateCallOptionBS(S0, K, T, r, sigma);
+                    displayOptionName = 'Option to Expand';
+                    break;
+                case 'abandon':
+                    calculatedValue = calculatePutOptionBS(S0, K, T, r, sigma);
+                    displayOptionName = 'Option to Abandon';
+                    break;
+                case 'switch':
+                    calculatedValue = calculateCallOptionBS(S0, K, T, r, sigma);
+                    displayOptionName = 'Option to Switch';
+                    break;
+                default:
+                    alert("Invalid option type selected.");
+                    return;
+            }
+
+            document.getElementById('resultOptionType').textContent = displayOptionName;
+            document.getElementById('optionValue').textContent = calculatedValue.toFixed(2);
+            document.getElementById('result').classList.remove('hidden');
+
+            // Update interpretation
+            let interpretationText = '';
+            if (calculatedValue > 0) {
+                interpretationText = `The calculated value of this ${displayOptionName} is positive, indicating that the strategic flexibility embedded in this project is valuable. This value is over and above any traditional NPV calculation.`;
+                if (optionType === 'defer' || optionType === 'expand' || optionType === 'switch') {
+                    interpretationText += ` This suggests that the right to proceed with this action (e.g., invest, scale up, change process) is worth considering, especially if the static NPV is negative or marginal.`;
+                } else if (optionType === 'abandon') {
+                    interpretationText += ` This suggests that the right to abandon the project if it performs poorly provides significant value by limiting downside risk.`;
+                }
+                interpretationText += ` Higher volatility and longer time horizons generally increase this option's value.`;
+            } else {
+                interpretationText = `The calculated value of this ${displayOptionName} is zero or negative, suggesting that the flexibility offered by this option may not be significant under the given parameters. This could be due to low volatility, short time to expiration, or the project's current value being far from the exercise cost.`;
+            }
+            document.getElementById('interpretationText').textContent = interpretationText;
+            document.getElementById('interpretation').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
